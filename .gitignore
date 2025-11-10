@@ -1,0 +1,135 @@
+# =========================================
+# Android Studio / IntelliJ .gitignore
+# =========================================
+
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+.gradle/
+local.properties
+gradle-app.setting
+.gradle/
+
+# Signing files
+*.jks
+*.keystore
+*.key.properties
+
+# Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/misc.xml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/deploymentTargetDropDown.xml
+
+# External native build
+.cxx/
+
+# Log and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.orig
+
+# OS-specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Gradle Wrapper
+gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Jetpack Compose build cache
+compose-cache/
+
+# Generated files
+captures/
+outputs/
+generated/
+intermediates/
+reports/
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+lint_report.html
+output.json
+
+# Kotlin
+*.ktx
+kotlin-js-store/
+
+# Android profiling
+*.hprof
+
+# Misc
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.so
+
+# Local configuration
+local.properties
+app/google-services.json
+app/google-services.plist
+app/src/*/google-services.json
+app/src/*/google-services.plist
+
+# Firebase and Crashlytics
+.crashlytics/
+firebase/
+app/fabric.properties
+
+# NDK / CMake
+obj/
+.externalNativeBuild/
+
+# IntelliJ-based caches
+.idea/caches/
+.idea/assetWizardSettings.xml
+
+# VSCode (if used)
+.vscode/
+
+# =========================================
+# Optional sections
+# =========================================
+
+# Uncomment if you use fastlane
+# fastlane/report.xml
+# fastlane/Preview.html
+# fastlane/screenshots
+# fastlane/test_output
+
+# Uncomment if you use Flutter
+# .dart_tool/
+# .flutter-plugins
+# .flutter-plugins-dependencies
+# .packages
+# .pub-cache/
+# .pub/
+# build/
+# ios/Flutter/.last_build_id
+

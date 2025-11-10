@@ -1,0 +1,68 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#212121"
+    android:padding="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="REPAIR MODE ACTIVE"
+        android:textColor="#FFC107"
+        android:letterSpacing="0.2"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="48dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="User data is encrypted and inaccessible."
+        android:textColor="#FFFFFF"
+        android:alpha="0.7"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true">
+
+        <Button
+            android:id="@+id/btn_run_diagnostics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Run Motorola Diagnostics Suite"
+            android:backgroundTint="#00796B"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Test Camera Hardware"
+            android:backgroundTint="#555555"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:id="@+id/tv_logs"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:text="> Waiting for technician input..."
+            android:fontFamily="monospace"
+            android:textColor="#00FF00"
+            android:background="#000000"
+            android:padding="8dp"
+            android:layout_marginTop="24dp"
+            android:textSize="12sp"/>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_exit_repair"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="EXIT REPAIR MODE"
+        android:backgroundTint="#D32F2F"
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
