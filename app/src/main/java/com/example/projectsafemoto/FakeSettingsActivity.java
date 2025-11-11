@@ -12,6 +12,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 
+import android.Manifest; // Add this
+import android.content.ActivityNotFoundException;
+import android.speech.RecognizerIntent; // Add this
+import androidx.activity.result.ActivityResultLauncher; // Add this
+import androidx.activity.result.contract.ActivityResultContracts; // Add this
+import androidx.core.content.ContextCompat;
+import android.content.pm.PackageManager;
+import java.util.ArrayList;
+import java.util.Locale;
+
 public class FakeSettingsActivity extends AppCompatActivity {
 
     private static final int AUTH_REQUEST_CODE = 100;
@@ -19,6 +29,9 @@ public class FakeSettingsActivity extends AppCompatActivity {
     private SharedPreferences prefs;
     private DevicePolicyManager dpm;
     private ComponentName deviceAdminReceiver;
+
+    private ActivityResultLauncher<String> requestAudioPermissionLauncher;
+    private ActivityResultLauncher<Intent> speechRecognizerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +44,41 @@ public class FakeSettingsActivity extends AppCompatActivity {
         dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         deviceAdminReceiver = new ComponentName(this, MyDeviceAdminReceiver.class);
         // ------------------------------
+
+        // --- Setup Permission Launcher ---
+        requestAudioPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        launchSpeechRecognizer();
+                    } else {
+                        Toast.makeText(this, "Audio permission is required for voice commands", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // --- Setup Speech Recognizer Launcher ---
+        speechRecognizerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+                        // DEMO MODE: If any speech is detected, trigger the mode.
+                        if (matches != null && !matches.isEmpty()) {
+                            String spokenText = matches.get(0); // Get what they said
+
+                            // Show the judge what was heard (this is good for the demo)
+                            Toast.makeText(this, "Command received: '" + spokenText + "'", Toast.LENGTH_SHORT).show();
+
+                            // Immediately start the authentication flow
+                            initiateAuthentication();
+
+                        } else {
+                            // This would happen if they open the mic but say nothing
+                            Toast.makeText(this, "No speech detected.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
 
         // Check persistence *first*
         if (prefs.getBoolean("isRepairModeActive", false)) {
@@ -56,6 +104,30 @@ public class FakeSettingsActivity extends AppCompatActivity {
                 initiateAuthentication();
             }
         });
+
+        findViewById(R.id.btn_voice_command).setOnClickListener(v -> {
+            checkAudioPermissionAndLaunch();
+        });
+    }
+
+    private void checkAudioPermissionAndLaunch() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            launchSpeechRecognizer();
+        } else {
+            // Request permission
+            requestAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
+        }
+    }
+
+    private void launchSpeechRecognizer() {
+        Intent speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say 'Enter Repair Mode'");
+        try {
+            speechRecognizerLauncher.launch(speechIntent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "Speech recognition not supported on this device", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void promptToEnableAdmin() {

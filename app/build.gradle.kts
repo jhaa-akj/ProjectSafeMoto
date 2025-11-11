@@ -36,6 +36,13 @@ android {
 dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
+    // CameraX libraries for intruder selfie
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("androidx.camera:camera-view:1.3.1")
+// For the speaker test (beep sound)
+    implementation("androidx.media:media:1.7.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
