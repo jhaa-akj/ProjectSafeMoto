@@ -26,6 +26,7 @@ import android.media.MediaPlayer;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
+import android.provider.MediaStore;
 
 public class RepairKioskActivity extends AppCompatActivity {
 
@@ -111,6 +112,24 @@ public class RepairKioskActivity extends AppCompatActivity {
         findViewById(R.id.btn_exit_repair).setOnClickListener(v -> {
             // Require authentication to exit as well!
             initiateExitAuthentication();
+        });
+
+        // SIMULATED Camera Test (Disables Gallery)
+        findViewById(R.id.btn_test_camera).setOnClickListener(v -> {
+            // This is the standard intent to open the camera for a single picture.
+            // It does NOT open the gallery browser.
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            try {
+                logView.setText("> Camera hardware test requested...");
+                startActivity(cameraIntent);
+
+                // We show this Toast AFTER to explain what's happening
+                Toast.makeText(this, "Opening camera... (Gallery is not accessible)", Toast.LENGTH_LONG).show();
+
+            } catch (Exception e) {
+                logView.setText("> Camera test failed: No camera app found.");
+                Toast.makeText(this, "Could not find a camera app.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

@@ -188,4 +188,24 @@ public class FakeSettingsActivity extends AppCompatActivity {
 
         startActivity(intent);
     }
+
+    @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        // Check if the key pressed is Volume Up
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+
+            // Show a Toast to prove it worked
+            Toast.makeText(this, "Volume Up pressed... launching voice command!", Toast.LENGTH_SHORT).show();
+
+            // Call the same method the mic button calls
+            checkAudioPermissionAndLaunch();
+
+            // 'return true' means we "consumed" this key press.
+            // The system volume will NOT change.
+            return true;
+        }
+
+        // For any other key, do the default action
+        return super.onKeyDown(keyCode, event);
+    }
 }
