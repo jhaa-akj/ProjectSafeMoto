@@ -16,15 +16,20 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.concurrent.Executor;
+import androidx.camera.core.Preview;
+import androidx.camera.view.PreviewView;
+import androidx.annotation.Nullable;
 
 public class IntruderSelfieCapturer {
 
     private static final String TAG = "SelfieCapturer";
     private ImageCapture imageCapture;
     private Context context;
+    private PreviewView previewView;
 
-    public IntruderSelfieCapturer(Context context) {
+    public IntruderSelfieCapturer(Context context, @Nullable PreviewView previewView) {
         this.context = context;
+        this.previewView = previewView; // Store the PreviewView
         startCamera((AppCompatActivity) context);
     }
 
@@ -36,21 +41,31 @@ public class IntruderSelfieCapturer {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-                // Build the ImageCapture use case
+                // Build ImageCapture (unchanged)
                 imageCapture = new ImageCapture.Builder().build();
 
-                // Select front camera
+                // Select front camera (unchanged)
                 CameraSelector cameraSelector = new CameraSelector.Builder()
                         .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                         .build();
 
-                // Unbind all before rebinding
+                // Unbind all (unchanged)
                 cameraProvider.unbindAll();
 
-                // Bind use cases to camera.
-                // We don't need a Preview, so we just bind imageCapture.
-                cameraProvider.bindToLifecycle(activity, cameraSelector, imageCapture);
-                Log.d(TAG, "CameraX bound for selfie capture.");
+                // --- NEW: Bind Preview if it exists ---
+                if (previewView != null) {
+                    // Build the Preview use case
+                    Preview preview = new Preview.Builder().build();
+                    preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                    // Bind all three: lifecycle, selector, preview, AND capture
+                    cameraProvider.bindToLifecycle(activity, cameraSelector, preview, imageCapture);
+                    Log.d(TAG, "CameraX bound with Preview and Capture.");
+                } else {
+                    // Original behavior (no preview)
+                    cameraProvider.bindToLifecycle(activity, cameraSelector, imageCapture);
+                    Log.d(TAG, "CameraX bound for selfie capture only.");
+                }
 
             } catch (Exception e) {
                 Log.e(TAG, "CameraX binding failed", e);

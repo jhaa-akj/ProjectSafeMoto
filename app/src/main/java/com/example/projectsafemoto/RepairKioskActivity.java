@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,13 +29,21 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 import android.provider.MediaStore;
 
-public class RepairKioskActivity extends AppCompatActivity {
+import androidx.camera.view.PreviewView; // Add this
+import android.view.View; // Add this
 
+import android.speech.tts.TextToSpeech; // Add this
+import java.util.Locale;
+
+public class RepairKioskActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
+    private TextToSpeech tts; // Add TTS variable
+    private boolean ttsInitialized = false;
     private static final int EXIT_AUTH_REQUEST_CODE = 101;
     private TextView logView;
     private DevicePolicyManager dpm;
     private TextView tvChargingStatus;
     private MediaPlayer mediaPlayer;
+    private PreviewView cameraPreview;
 
     // --- For Intruder Selfie ---
     private IntruderSelfieCapturer selfieCapturer;
@@ -47,22 +56,23 @@ public class RepairKioskActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_repair_kiosk);
-
+        tts = new TextToSpeech(this, this);
+        cameraPreview = findViewById(R.id.camera_preview);
+        checkCameraPermissionAndInit(cameraPreview);
         // --- Setup Camera Permission Launcher ---
         requestCameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (isGranted) {
                         // Permission granted, initialize the camera
-                        selfieCapturer = new IntruderSelfieCapturer(this);
+                        selfieCapturer = new IntruderSelfieCapturer(this, cameraPreview); // <-- THIS IS THE FIX
                     } else {
                         Toast.makeText(this, "Camera permission needed for intruder selfies", Toast.LENGTH_LONG).show();
                     }
                 });
 
         // --- Check Camera Permission on Start ---
-        checkCameraPermissionAndInit();
-
+        checkCameraPermissionAndInit(cameraPreview);
         // --- Start Lock Task Mode ---
         dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         boolean shouldLock = getIntent().getBooleanExtra("START_LOCK_TASK", false);
@@ -93,9 +103,16 @@ public class RepairKioskActivity extends AppCompatActivity {
 
         // SIMULATED Camera Test (Disables Gallery)
         findViewById(R.id.btn_test_camera).setOnClickListener(v -> {
-            // We just show a Toast to simulate this restricted access
-            Toast.makeText(this, "Camera opened in diagnostic mode (Gallery access disabled)", Toast.LENGTH_LONG).show();
-            logView.setText("> Camera hardware test requested...\n> Camera OK.");
+            // Toggle visibility of the camera preview
+            if (cameraPreview.getVisibility() == View.GONE) {
+                cameraPreview.setVisibility(View.VISIBLE);
+                logView.setText("> Camera preview ON. (Gallery is inaccessible).");
+                ((Button) v).setText("Hide Camera Preview"); // Update button text
+            } else {
+                cameraPreview.setVisibility(View.GONE);
+                logView.setText("> Camera preview OFF.");
+                ((Button) v).setText("Test Camera (No Gallery)"); // Change it back
+            }
         });
 
         // NEW: Speaker Test
@@ -133,9 +150,38 @@ public class RepairKioskActivity extends AppCompatActivity {
         });
     }
 
-    private void checkCameraPermissionAndInit() {
+    // --- This is the required method for the TTS listener ---
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            int result = tts.setLanguage(Locale.US);
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS", "Language not supported");
+            } else {
+                ttsInitialized = true;
+                // Speak the welcome message!
+                tts.speak("Repair mode entered. System is locked.", TextToSpeech.QUEUE_FLUSH, null, "WELCOME_MSG");
+            }
+        } else {
+            Log.e("TTS", "Initialization failed");
+        }
+    }
+
+    // --- Add onDestroy to shut down the TTS engine ---
+    @Override
+    protected void onDestroy() {
+        // Shutdown TTS
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
+        super.onDestroy();
+    }
+
+    private void checkCameraPermissionAndInit(PreviewView previewView) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            selfieCapturer = new IntruderSelfieCapturer(this);
+            // Pass the previewView to the capturer
+            selfieCapturer = new IntruderSelfieCapturer(this, previewView);
         } else {
             requestCameraLauncher.launch(Manifest.permission.CAMERA);
         }
@@ -214,12 +260,11 @@ public class RepairKioskActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == EXIT_AUTH_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                // User passed auth, exit mode
                 exitRepairMode();
             } else {
-                // *** AUTHENTICATION FAILED! ***
                 Toast.makeText(this, "Authentication Failed!", Toast.LENGTH_SHORT).show();
                 if (selfieCapturer != null) {
+                    // The capturer is already set up, just take the photo
                     selfieCapturer.takePhoto();
                 }
             }
@@ -284,6 +329,29 @@ public class RepairKioskActivity extends AppCompatActivity {
             mediaPlayer.release();
             mediaPlayer = null;
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        // Check if the key pressed is Volume Up
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+
+            Toast.makeText(this, "Exit requested via hardware key...", Toast.LENGTH_SHORT).show();
+
+            // Give audio feedback, since the screen might be "broken"
+            if (ttsInitialized) {
+                tts.speak("Exit requested. Please authenticate to restore your device.", TextToSpeech.QUEUE_FLUSH, null, "EXIT_REQUEST");
+            }
+
+            // Immediately trigger the PIN/Pattern/Fingerprint screen
+            initiateExitAuthentication();
+
+            // 'return true' means we "consumed" this key press.
+            return true;
+        }
+
+        // For any other key, do the default action
+        return super.onKeyDown(keyCode, event);
     }
 
 }

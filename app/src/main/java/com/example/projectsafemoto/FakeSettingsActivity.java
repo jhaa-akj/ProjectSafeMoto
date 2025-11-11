@@ -63,18 +63,17 @@ public class FakeSettingsActivity extends AppCompatActivity {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
-                        // DEMO MODE: If any speech is detected, trigger the mode.
                         if (matches != null && !matches.isEmpty()) {
-                            String spokenText = matches.get(0); // Get what they said
-
-                            // Show the judge what was heard (this is good for the demo)
+                            String spokenText = matches.get(0);
                             Toast.makeText(this, "Command received: '" + spokenText + "'", Toast.LENGTH_SHORT).show();
 
-                            // Immediately start the authentication flow
-                            initiateAuthentication();
+                            // --- THIS IS THE CHANGE ---
+                            // Instead of calling initiateAuthentication(), we
+                            // bypass it and call activateRepairMode() directly.
+                            activateRepairMode();
+                            // -------------------------
 
                         } else {
-                            // This would happen if they open the mic but say nothing
                             Toast.makeText(this, "No speech detected.", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -188,6 +187,25 @@ public class FakeSettingsActivity extends AppCompatActivity {
 
         startActivity(intent);
     }
+
+//    @Override
+//    public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
+//        // Check if the key is Volume Up
+//        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+//
+//            // Show a Toast to prove it worked
+//            Toast.makeText(this, "Volume Up long-press detected... launching voice command!", Toast.LENGTH_SHORT).show();
+//
+//            // Call the same method the mic button calls
+//            checkAudioPermissionAndLaunch();
+//
+//            // 'return true' means we "consumed" this key press.
+//            return true;
+//        }
+//
+//        // For any other key, do the default action
+//        return super.onKeyLongPress(keyCode, event);
+//    }
 
     @Override
     public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
