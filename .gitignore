@@ -1,135 +1,101 @@
-# =========================================
-# Android Studio / IntelliJ .gitignore
-# =========================================
+# ======================================
+# Android Studio / Gradle Project .gitignore
+# ======================================
 
-# Gradle
-.gradle/
-build/
-**/build/
+# Gradle build output
+/build/
+*/build/
 !gradle/wrapper/gradle-wrapper.jar
-.gradle/
-local.properties
-gradle-app.setting
-.gradle/
 
-# Signing files
+# Local configuration (SDK path, etc.)
+local.properties
+
+# Gradle caches and logs
+.gradle/
+**/build/
+*.log
+
+# Android generated files
+captures/
+output.json
+*.apk
+*.ap_
+*.aab
+
+# Keystore files (keep private!)
 *.jks
 *.keystore
-*.key.properties
 
-# Android Studio
-.idea/
-*.iml
-*.ipr
-*.iws
+# ==============================
+# IntelliJ / Android Studio files
+# ==============================
+
+# Exclude most of .idea, but keep important project configs
+.idea/*
+!.idea/codeStyles/
+!.idea/runConfigurations/
+!.idea/vcs.xml
+!.idea/misc.xml
+
+# User-specific files (should not be shared)
 .idea/workspace.xml
 .idea/tasks.xml
-.idea/gradle.xml
 .idea/dictionaries
-.idea/libraries
-.idea/caches
+.idea/libraries/
+.idea/caches/
 .idea/modules.xml
 .idea/navEditor.xml
 .idea/assetWizardSettings.xml
-.idea/misc.xml
-.idea/compiler.xml
-.idea/jarRepositories.xml
 .idea/deploymentTargetDropDown.xml
+.idea/shelf/
 
-# External native build
-.cxx/
+# ==============================
+# OS-specific files
+# ==============================
 
-# Log and temporary files
-*.log
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ==============================
+# Miscellaneous
+# ==============================
+# Built application files
+*.dex
+*.class
+
+# Backup & temporary files
 *.tmp
 *.temp
 *.bak
 *.swp
-*.swo
-*.orig
 
-# OS-specific
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Icon?
-Desktop.ini
+# ==============================
+# Android Studio Navigation Editor temp files
+# ==============================
+.navigation/
 
-# Gradle Wrapper
-gradle/
-!gradle/wrapper/gradle-wrapper.jar
+# ==============================
+# Jetpack Compose Preview cache
+# ==============================
+*.compose-cache/
 
-# Jetpack Compose build cache
-compose-cache/
+# ==============================
+# Firebase / Google Services
+# ==============================
+# (Optional — remove if you want to share your google-services.json)
+google-services.json
+GoogleService-Info.plist
 
-# Generated files
-captures/
-outputs/
-generated/
-intermediates/
-reports/
-lint/intermediates/
-lint/generated/
-lint/outputs/
-lint/tmp/
-lint_report.html
-output.json
-
-# Kotlin
-*.ktx
-kotlin-js-store/
-
-# Android profiling
-*.hprof
-
-# Misc
-*.apk
-*.aab
-*.ap_
-*.dex
-*.class
-*.so
-
-# Local configuration
-local.properties
-app/google-services.json
-app/google-services.plist
-app/src/*/google-services.json
-app/src/*/google-services.plist
-
-# Firebase and Crashlytics
-.crashlytics/
-firebase/
-app/fabric.properties
-
-# NDK / CMake
-obj/
-.externalNativeBuild/
-
-# IntelliJ-based caches
-.idea/caches/
-.idea/assetWizardSettings.xml
-
-# VSCode (if used)
-.vscode/
-
-# =========================================
-# Optional sections
-# =========================================
-
-# Uncomment if you use fastlane
-# fastlane/report.xml
-# fastlane/Preview.html
-# fastlane/screenshots
-# fastlane/test_output
-
-# Uncomment if you use Flutter
-# .dart_tool/
-# .flutter-plugins
-# .flutter-plugins-dependencies
-# .packages
-# .pub-cache/
-# .pub/
-# build/
-# ios/Flutter/.last_build_id
-
+# ==============================
+# Signing Configs
+# ==============================
+# (Optional — if you use a signing.properties file)
+signing.properties
