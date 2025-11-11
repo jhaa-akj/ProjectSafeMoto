@@ -9,11 +9,16 @@ import android.view.View;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 
 public class FakeSettingsActivity extends AppCompatActivity {
 
     private static final int AUTH_REQUEST_CODE = 100;
+    private static final int ADMIN_REQUEST_CODE = 101;
     private SharedPreferences prefs;
+    private DevicePolicyManager dpm;
+    private ComponentName deviceAdminReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,18 +27,43 @@ public class FakeSettingsActivity extends AppCompatActivity {
         // PERSISTENCE CHECK: If already in repair mode, jump straight there.
         // This prevents judges from just hitting "back" to escape the demo.
         prefs = getSharedPreferences("MotoRepairPrefs", MODE_PRIVATE);
+        // --- Setup for Device Admin ---
+        dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        deviceAdminReceiver = new ComponentName(this, MyDeviceAdminReceiver.class);
+        // ------------------------------
+
+        // Check persistence *first*
         if (prefs.getBoolean("isRepairModeActive", false)) {
-            startKioskActivity();
-            finish(); // Close this activity so they can't go back to it
+            // Check if we are the active admin, if not, we can't start lock task
+            if (dpm.isDeviceOwnerApp(getPackageName()) || dpm.isAdminActive(deviceAdminReceiver)) {
+                startKioskActivity(true); // Start and LOCK
+            } else {
+                startKioskActivity(false); // Start but DON'T lock
+            }
+            finish();
             return;
         }
 
         setContentView(R.layout.activity_fake_settings);
 
         findViewById(R.id.btn_repair_mode).setOnClickListener(v -> {
-            // 1. Trigger real Android authentication (PIN/Pattern/Biometric)
-            initiateAuthentication();
+            // 1. Check if we are an admin first
+            if (!dpm.isAdminActive(deviceAdminReceiver)) {
+                // If not, ask for permission
+                promptToEnableAdmin();
+            } else {
+                // 2. If we are, proceed to auth
+                initiateAuthentication();
+            }
         });
+    }
+
+    private void promptToEnableAdmin() {
+        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, deviceAdminReceiver);
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                "Repair Mode needs Admin permission to lock the screen for the technician.");
+        startActivityForResult(intent, ADMIN_REQUEST_CODE);
     }
 
     private void initiateAuthentication() {
@@ -51,29 +81,39 @@ public class FakeSettingsActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ADMIN_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Admin permission granted!", Toast.LENGTH_SHORT).show();
+                // Now proceed to authentication
+                initiateAuthentication();
+            } else {
+                Toast.makeText(this, "Admin permission is required for Repair Mode", Toast.LENGTH_LONG).show();
+            }
+        }
+
         if (requestCode == AUTH_REQUEST_CODE && resultCode == RESULT_OK) {
-            // Auth success!
             activateRepairMode();
         }
     }
 
     private void activateRepairMode() {
-        // Save state so if app restarts, we are still in repair mode
         prefs.edit().putBoolean("isRepairModeActive", true).apply();
-
         Toast.makeText(this, "Rebooting into Repair Mode...", Toast.LENGTH_LONG).show();
 
-        // Small delay to simulate a system switch/reboot
         new android.os.Handler().postDelayed(() -> {
-            startKioskActivity();
+            startKioskActivity(true); // Start and LOCK
             finish();
         }, 2000);
     }
 
-    private void startKioskActivity() {
+    private void startKioskActivity(boolean lock) {
         Intent intent = new Intent(this, RepairKioskActivity.class);
-        // Clear the back stack so they can't go back to settings
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        // Pass a flag to tell the Kiosk to lock itself
+        intent.putExtra("START_LOCK_TASK", lock);
+
         startActivity(intent);
     }
 }

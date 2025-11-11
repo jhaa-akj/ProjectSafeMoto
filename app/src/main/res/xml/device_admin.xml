@@ -1,0 +1,5 @@
+<device-admin>
+    <uses-policies>
+        <limit-password />
+    </uses-policies>
+</device-admin>

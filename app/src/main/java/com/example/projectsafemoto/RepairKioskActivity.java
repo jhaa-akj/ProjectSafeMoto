@@ -13,15 +13,29 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.admin.DevicePolicyManager;
+import android.app.ActivityManager;
+import android.os.Build;
+
 public class RepairKioskActivity extends AppCompatActivity {
 
     private static final int EXIT_AUTH_REQUEST_CODE = 101;
     private TextView logView;
+    private DevicePolicyManager dpm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_repair_kiosk);
+
+        // --- Start Lock Task Mode ---
+        dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        boolean shouldLock = getIntent().getBooleanExtra("START_LOCK_TASK", false);
+
+        if (shouldLock && !isInLockTaskMode()) {
+            startLockTask();
+        }
+        // -----------------------------
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true /* enabled by default */) {
             @Override
@@ -46,6 +60,30 @@ public class RepairKioskActivity extends AppCompatActivity {
         });
     }
 
+    private boolean isInLockTaskMode() {
+        // We need ActivityManager to check the state
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am == null) {
+            return false;
+        }
+
+        // The getLockTaskModeState() method was added in API 23 (Android 6.0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                // Check the state using ActivityManager
+                return am.getLockTaskModeState() != ActivityManager.LOCK_TASK_MODE_NONE;
+            } catch (Exception e) {
+                e.printStackTrace();
+                // If something goes wrong, assume we're not in lock mode
+                return false;
+            }
+        }
+
+        // For APIs 21 & 22, there is no reliable public method to check.
+        // Returning 'false' is a safe fallback for the demo.
+        return false;
+    }
+
     private void initiateExitAuthentication() {
         KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
         if (km.isKeyguardSecure()) {
@@ -65,13 +103,17 @@ public class RepairKioskActivity extends AppCompatActivity {
     }
 
     private void exitRepairMode() {
-        // 1. Clear the persistence flag
+        // --- Stop Lock Task Mode FIRST ---
+        if (isInLockTaskMode()) {
+            stopLockTask();
+        }
+        // ---------------------------------
+
         SharedPreferences prefs = getSharedPreferences("MotoRepairPrefs", MODE_PRIVATE);
         prefs.edit().putBoolean("isRepairModeActive", false).apply();
 
         Toast.makeText(this, "Restoring user data...", Toast.LENGTH_LONG).show();
 
-        // 2. Go back to the "Normal" settings view
         Intent intent = new Intent(this, FakeSettingsActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
