@@ -1,31 +1,38 @@
-package com.example.projectsafemoto;
+package com.example.projectsafemoto; // Make sure this package is correct
 
+import android.Manifest;
 import android.app.KeyguardManager;
+import android.app.admin.DevicePolicyManager;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
-
-import android.Manifest; // Add this
-import android.content.ActivityNotFoundException;
-import android.speech.RecognizerIntent; // Add this
-import androidx.activity.result.ActivityResultLauncher; // Add this
-import androidx.activity.result.contract.ActivityResultContracts; // Add this
 import androidx.core.content.ContextCompat;
-import android.content.pm.PackageManager;
+
+import com.google.android.material.appbar.MaterialToolbar;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class FakeSettingsActivity extends AppCompatActivity {
 
     private static final int AUTH_REQUEST_CODE = 100;
-    private static final int ADMIN_REQUEST_CODE = 101;
+    private static final int ADMIN_REQUEST_CODE = 101; // For Device Admin
+
     private SharedPreferences prefs;
     private DevicePolicyManager dpm;
     private ComponentName deviceAdminReceiver;
@@ -36,14 +43,29 @@ public class FakeSettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_fake_settings);
 
-        // PERSISTENCE CHECK: If already in repair mode, jump straight there.
-        // This prevents judges from just hitting "back" to escape the demo.
+        // --- Setup the Toolbar ---
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        // -------------------------
+
+        // --- Setup Persistence & Device Admin ---
         prefs = getSharedPreferences("MotoRepairPrefs", MODE_PRIVATE);
-        // --- Setup for Device Admin ---
         dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         deviceAdminReceiver = new ComponentName(this, MyDeviceAdminReceiver.class);
-        // ------------------------------
+        // --------------------------------------
+
+        // PERSISTENCE CHECK: If already in repair mode, jump straight there.
+        if (prefs.getBoolean("isRepairModeActive", false)) {
+            if (dpm.isDeviceOwnerApp(getPackageName()) || dpm.isAdminActive(deviceAdminReceiver)) {
+                startKioskActivity(true); // Start and LOCK
+            } else {
+                startKioskActivity(false); // Start but DON'T lock
+            }
+            finish();
+            return;
+        }
 
         // --- Setup Permission Launcher ---
         requestAudioPermissionLauncher = registerForActivityResult(
@@ -62,58 +84,74 @@ public class FakeSettingsActivity extends AppCompatActivity {
                 result -> {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-
                         if (matches != null && !matches.isEmpty()) {
                             String spokenText = matches.get(0);
                             Toast.makeText(this, "Command received: '" + spokenText + "'", Toast.LENGTH_SHORT).show();
-
-                            // --- THIS IS THE CHANGE ---
-                            // Instead of calling initiateAuthentication(), we
-                            // bypass it and call activateRepairMode() directly.
+                            // Bypass PIN for voice
                             activateRepairMode();
-                            // -------------------------
-
                         } else {
                             Toast.makeText(this, "No speech detected.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
 
-        // Check persistence *first*
-        if (prefs.getBoolean("isRepairModeActive", false)) {
-            // Check if we are the active admin, if not, we can't start lock task
-            if (dpm.isDeviceOwnerApp(getPackageName()) || dpm.isAdminActive(deviceAdminReceiver)) {
-                startKioskActivity(true); // Start and LOCK
-            } else {
-                startKioskActivity(false); // Start but DON'T lock
-            }
-            finish();
-            return;
-        }
 
-        setContentView(R.layout.activity_fake_settings);
-
+        // --- REAL BUTTON: Repair Mode ---
         findViewById(R.id.btn_repair_mode).setOnClickListener(v -> {
-            // 1. Check if we are an admin first
             if (!dpm.isAdminActive(deviceAdminReceiver)) {
-                // If not, ask for permission
                 promptToEnableAdmin();
             } else {
-                // 2. If we are, proceed to auth
                 initiateAuthentication();
             }
         });
 
-        findViewById(R.id.btn_voice_command).setOnClickListener(v -> {
-            checkAudioPermissionAndLaunch();
-        });
+        // --- FAKE BUTTON LISTENERS ---
+        // We create a dummy listener to show a Toast.
+        View.OnClickListener fakeFeatureListener = v -> {
+            Toast.makeText(this, "This feature is for demo purposes only.", Toast.LENGTH_SHORT).show();
+        };
+
+        findViewById(R.id.fake_screen_lock).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_fingerprint).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_security_update).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_permission).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_dashboard).setOnClickListener(fakeFeatureListener);
+        // ---------------------------
     }
+
+    // --- Toolbar Menu Methods ---
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.settings_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_voice) {
+            checkAudioPermissionAndLaunch();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    // --- Volume Key Trigger ---
+    @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            Toast.makeText(this, "Volume Up pressed... launching voice command!", Toast.LENGTH_SHORT).show();
+            checkAudioPermissionAndLaunch();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    // --- All other helper methods (unchanged) ---
 
     private void checkAudioPermissionAndLaunch() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             launchSpeechRecognizer();
         } else {
-            // Request permission
             requestAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
         }
     }
@@ -143,7 +181,6 @@ public class FakeSettingsActivity extends AppCompatActivity {
             Intent authIntent = km.createConfirmDeviceCredentialIntent("Enable Repair Mode", "Enter PIN to lock data.");
             startActivityForResult(authIntent, AUTH_REQUEST_CODE);
         } else {
-            // Fallback for demo devices with no PIN set
             Toast.makeText(this, "Demo: Skipping Auth (No PIN set)", Toast.LENGTH_SHORT).show();
             activateRepairMode();
         }
@@ -156,7 +193,6 @@ public class FakeSettingsActivity extends AppCompatActivity {
         if (requestCode == ADMIN_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, "Admin permission granted!", Toast.LENGTH_SHORT).show();
-                // Now proceed to authentication
                 initiateAuthentication();
             } else {
                 Toast.makeText(this, "Admin permission is required for Repair Mode", Toast.LENGTH_LONG).show();
@@ -173,7 +209,12 @@ public class FakeSettingsActivity extends AppCompatActivity {
         Toast.makeText(this, "Rebooting into Repair Mode...", Toast.LENGTH_LONG).show();
 
         new android.os.Handler().postDelayed(() -> {
-            startKioskActivity(true); // Start and LOCK
+            startKioskActivity(true);
+//            Real-world Android security involves sandboxing, data encryption, and secure key handling. This video on Android security best practices can give you more context.
+//
+//[Top 4 Security Best Practices for Your Android App](https://www.youtube.com/watch?v=VQvfvXD3ec4)
+//
+//            This video explains concepts like data encryption, secure key storage, and network security, which are all relevant to your idea of creating a secure "Repair Mode."
             finish();
         }, 2000);
     }
@@ -181,49 +222,7 @@ public class FakeSettingsActivity extends AppCompatActivity {
     private void startKioskActivity(boolean lock) {
         Intent intent = new Intent(this, RepairKioskActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
-        // Pass a flag to tell the Kiosk to lock itself
         intent.putExtra("START_LOCK_TASK", lock);
-
         startActivity(intent);
-    }
-
-//    @Override
-//    public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
-//        // Check if the key is Volume Up
-//        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-//
-//            // Show a Toast to prove it worked
-//            Toast.makeText(this, "Volume Up long-press detected... launching voice command!", Toast.LENGTH_SHORT).show();
-//
-//            // Call the same method the mic button calls
-//            checkAudioPermissionAndLaunch();
-//
-//            // 'return true' means we "consumed" this key press.
-//            return true;
-//        }
-//
-//        // For any other key, do the default action
-//        return super.onKeyLongPress(keyCode, event);
-//    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        // Check if the key pressed is Volume Up
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-
-            // Show a Toast to prove it worked
-            Toast.makeText(this, "Volume Up pressed... launching voice command!", Toast.LENGTH_SHORT).show();
-
-            // Call the same method the mic button calls
-            checkAudioPermissionAndLaunch();
-
-            // 'return true' means we "consumed" this key press.
-            // The system volume will NOT change.
-            return true;
-        }
-
-        // For any other key, do the default action
-        return super.onKeyDown(keyCode, event);
     }
 }
