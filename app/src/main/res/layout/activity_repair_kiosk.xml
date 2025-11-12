@@ -1,106 +1,164 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#212121"
-    android:padding="32dp">
+    android:background="?attr/colorSurface"
+    tools:context=".RepairKioskActivity">
 
-    <TextView
-        android:id="@+id/tv_header"
-        android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/header_card"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="48dp"
-        android:letterSpacing="0.2"
-        android:text="REPAIR MODE ACTIVE"
-        android:textColor="#FFC107"
-        android:textStyle="bold" />
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/tv_subtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tv_header"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
-        android:alpha="0.7"
-        android:text="User data is encrypted and inaccessible."
-        android:textColor="#FFFFFF" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/img_warning"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_warning"
+                app:tint="?attr/colorError" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_header"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Repair Mode Active"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorError" />
+
+                <TextView
+                    android:id="@+id/tv_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.7"
+                    android:text="User data is encrypted."
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/tv_charging_status"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tv_subtitle"
-        android:layout_centerHorizontal="true"
+        android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
+        android:background="@drawable/abc_list_selector_background_transition_holo_dark"
+        android:drawablePadding="8dp"
+        android:padding="12dp"
         android:text="Charging Port: Checking..."
-        android:textColor="#FFFFFF"
-        android:textSize="16sp" />
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurface"
+        app:drawableStartCompat="@drawable/ic_security"
+        app:drawableTint="?attr/colorOnSurfaceVariant"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_card" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <androidx.gridlayout.widget.GridLayout
+        android:id="@+id/diagnostic_grid"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:orientation="vertical">
+        android:layout_margin="8dp"
+        android:columnCount="2"
+        android:rowCount="2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_charging_status">
 
-        <androidx.camera.view.PreviewView
-            android:id="@+id/camera_preview"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone" />
-
-        <Button
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btn_run_diagnostics"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#00796B"
-            android:text="Run System Diagnostics" />
+            style="@style/DiagnosticCard"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_handyman" app:tint="?attr/colorPrimary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="System Diags" android:textAppearance="?attr/textAppearanceLabelLarge"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <Button
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btn_test_camera"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#555555"
-            android:text="Test Camera (No Gallery)" />
+            style="@style/DiagnosticCard"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_photo_camera" app:tint="?attr/colorPrimary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Test Camera" android:textAppearance="?attr/textAppearanceLabelLarge"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <Button
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btn_test_speaker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#555555"
-            android:text="Test Speakers" />
+            style="@style/DiagnosticCard"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_volume_up" app:tint="?attr/colorPrimary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Test Speaker" android:textAppearance="?attr/textAppearanceLabelLarge"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <Button
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btn_report_issue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#004D40"
-            android:text="Report App Issue" />
+            style="@style/DiagnosticCard"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_bug_report" app:tint="?attr/colorPrimary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Report Issue" android:textAppearance="?attr/textAppearanceLabelLarge"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/tv_logs"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_marginTop="24dp"
-            android:background="#000000"
-            android:fontFamily="monospace"
-            android:padding="8dp"
-            android:text="> Waiting for technician input..."
-            android:textColor="#00FF00"
-            android:textSize="12sp" />
+    </androidx.gridlayout.widget.GridLayout>
 
-    </LinearLayout>
+    <TextView
+        android:id="@+id/tv_logs"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:background="#000000"
+        android:fontFamily="monospace"
+        android:padding="8dp"
+        android:text="> Waiting for technician input..."
+        android:textColor="#00FF00"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toTopOf="@id/btn_exit_repair"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/diagnostic_grid" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_exit_repair"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:backgroundTint="#D32F2F"
-        android:text="EXIT REPAIR MODE" />
+        android:layout_margin="16dp"
+        android:padding="12dp"
+        android:text="EXIT REPAIR MODE"
+        app:backgroundTint="#B02C2C"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

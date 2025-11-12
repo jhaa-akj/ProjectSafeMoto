@@ -57,7 +57,7 @@ public class RepairKioskActivity extends AppCompatActivity implements TextToSpee
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_repair_kiosk);
         tts = new TextToSpeech(this, this);
-        cameraPreview = findViewById(R.id.camera_preview);
+//        cameraPreview = findViewById(R.id.camera_preview);
         checkCameraPermissionAndInit(cameraPreview);
         // --- Setup Camera Permission Launcher ---
         requestCameraLauncher = registerForActivityResult(
@@ -158,9 +158,20 @@ public class RepairKioskActivity extends AppCompatActivity implements TextToSpee
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e("TTS", "Language not supported");
             } else {
+
+                // --- NEW: Adjusting the voice tone ---
+                // Default is 1.0. Lowering this makes the voice sound
+                // calmer and less "rushed".
+                tts.setSpeechRate(0.7f);
+
+                // Default is 1.0. A slightly lower pitch can sound more serious/professional.
+                tts.setPitch(1.0f);
+                // ----------------------------------------
+
                 ttsInitialized = true;
-                // Speak the welcome message!
-                tts.speak("Repair mode entered. System is locked.", TextToSpeech.QUEUE_FLUSH, null, "WELCOME_MSG");
+
+                // --- NEW: Updated, more polite welcome message ---
+                tts.speak("Repair mode enabled. Your device is now secure for service.", TextToSpeech.QUEUE_FLUSH, null, "WELCOME_MSG");
             }
         } else {
             Log.e("TTS", "Initialization failed");
@@ -333,25 +344,20 @@ public class RepairKioskActivity extends AppCompatActivity implements TextToSpee
 
     @Override
     public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        // Check if the key pressed is Volume Up
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
 
             Toast.makeText(this, "Exit requested via hardware key...", Toast.LENGTH_SHORT).show();
 
-            // Give audio feedback, since the screen might be "broken"
             if (ttsInitialized) {
-                tts.speak("Exit requested. Please authenticate to restore your device.", TextToSpeech.QUEUE_FLUSH, null, "EXIT_REQUEST");
+                // --- NEW: Updated, more polite exit message ---
+                tts.speak("Exit requested. Please verify to restore your device.", TextToSpeech.QUEUE_FLUSH, null, "EXIT_REQUEST");
             }
 
-            // Immediately trigger the PIN/Pattern/Fingerprint screen
             initiateExitAuthentication();
 
-            // 'return true' means we "consumed" this key press.
             return true;
         }
 
-        // For any other key, do the default action
         return super.onKeyDown(keyCode, event);
     }
-
 }

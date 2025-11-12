@@ -7,12 +7,14 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Moto Settings"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
+        android:theme="@style/Theme.ProjectSafeMoto">
+<!--        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">-->
 
         <activity android:name=".FakeSettingsActivity" android:exported="true">
             <intent-filter>
@@ -25,13 +27,19 @@
 <!--            android:launchMode="singleTask"-->
 <!--            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"-->
 <!--            android:exported="false"/>-->
+<!--        <activity android:name=".RepairKioskActivity"-->
+<!--            android:launchMode="singleTask"-->
+<!--            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"-->
+<!--            android:exported="false">-->
+
+<!--            <meta-data android:name="android.app.lock_task_allowed" android:value="true" />-->
+
+<!--        </activity>-->
+
         <activity android:name=".RepairKioskActivity"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
             android:exported="false">
-
             <meta-data android:name="android.app.lock_task_allowed" android:value="true" />
-
         </activity>
 
         <receiver
