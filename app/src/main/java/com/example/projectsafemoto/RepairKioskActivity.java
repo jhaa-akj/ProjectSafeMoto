@@ -35,9 +35,13 @@ import android.view.View; // Add this
 import android.speech.tts.TextToSpeech; // Add this
 import java.util.Locale;
 
+import android.os.Handler;
+import android.os.Looper;
+
 public class RepairKioskActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
     private TextToSpeech tts; // Add TTS variable
     private boolean ttsInitialized = false;
+    private Handler logHandler = new Handler(Looper.getMainLooper());
     private static final int EXIT_AUTH_REQUEST_CODE = 101;
     private TextView logView;
     private DevicePolicyManager dpm;
@@ -98,7 +102,29 @@ public class RepairKioskActivity extends AppCompatActivity implements TextToSpee
 
         // FAKE DIAGNOSTIC BUTTON
         findViewById(R.id.btn_run_diagnostics).setOnClickListener(v -> {
-            logView.setText("> Running CPU Stress Test...\n> CPU OK.\n> Checking Storage Integrity...\n> Storage OK (User partition encrypted).\n> DIAGNOSTICS COMPLETE.");
+            // 1. Stop any previous logging
+            logHandler.removeCallbacksAndMessages(null);
+
+            // 2. Start the log sequence
+            logView.setText(""); // Clear the log first
+            logView.append("> Running CPU Stress Test...\n");
+
+            // 3. Post the next lines with a delay
+            logHandler.postDelayed(() -> {
+                logView.append("> CPU OK.\n");
+            }, 1200); // 1.2 second delay
+
+            logHandler.postDelayed(() -> {
+                logView.append("> Checking Storage Integrity...\n");
+            }, 2000); // 2 second delay
+
+            logHandler.postDelayed(() -> {
+                logView.append("> Storage OK (User partition encrypted).\n");
+            }, 3500); // 3.5 second delay
+
+            logHandler.postDelayed(() -> {
+                logView.append("> DIAGNOSTICS COMPLETE.");
+            }, 4000); // 4 second delay
         });
 
         // SIMULATED Camera Test (Disables Gallery)
@@ -186,6 +212,7 @@ public class RepairKioskActivity extends AppCompatActivity implements TextToSpee
             tts.stop();
             tts.shutdown();
         }
+        logHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
