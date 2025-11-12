@@ -1,4 +1,4 @@
-package com.example.projectsafemoto; // Make sure this package is correct
+package com.example.projectsafemoto;
 
 import android.Manifest;
 import android.app.KeyguardManager;
@@ -111,11 +111,20 @@ public class FakeSettingsActivity extends AppCompatActivity {
             Toast.makeText(this, "This feature is for demo purposes only.", Toast.LENGTH_SHORT).show();
         };
 
+        // Attach listener to all fake items
         findViewById(R.id.fake_screen_lock).setOnClickListener(fakeFeatureListener);
         findViewById(R.id.fake_fingerprint).setOnClickListener(fakeFeatureListener);
         findViewById(R.id.fake_security_update).setOnClickListener(fakeFeatureListener);
         findViewById(R.id.fake_permission).setOnClickListener(fakeFeatureListener);
         findViewById(R.id.fake_dashboard).setOnClickListener(fakeFeatureListener);
+
+        // --- NEW FAKE ITEMS ---
+        findViewById(R.id.fake_find_device).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_app_lock).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_sim_lock).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_encryption).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_alerts).setOnClickListener(fakeFeatureListener);
+        findViewById(R.id.fake_app_pinning).setOnClickListener(fakeFeatureListener);
         // ---------------------------
     }
 
@@ -210,11 +219,6 @@ public class FakeSettingsActivity extends AppCompatActivity {
 
         new android.os.Handler().postDelayed(() -> {
             startKioskActivity(true);
-//            Real-world Android security involves sandboxing, data encryption, and secure key handling. This video on Android security best practices can give you more context.
-//
-//[Top 4 Security Best Practices for Your Android App](https://www.youtube.com/watch?v=VQvfvXD3ec4)
-//
-//            This video explains concepts like data encryption, secure key storage, and network security, which are all relevant to your idea of creating a secure "Repair Mode."
             finish();
         }, 2000);
     }
